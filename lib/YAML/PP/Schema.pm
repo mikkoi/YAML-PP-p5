@@ -74,7 +74,7 @@ my %LOADED_SCHEMA = (
 );
 
 sub load_subschemas {
-    my ($self, @schemas) = @_;
+    my ($self, $yp, @schemas) = @_;
     my $i = 0;
     while ($i < @schemas) {
         my $item = $schemas[ $i ];
@@ -82,6 +82,7 @@ sub load_subschemas {
         if (blessed($item)) {
             $item->register(
                 schema => $self,
+                yp => $yp,
             );
             next;
         }
@@ -115,6 +116,7 @@ sub load_subschemas {
         $class->register(
             schema => $self,
             options => \@options,
+            yp => $yp,
         );
 
     }

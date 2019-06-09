@@ -31,6 +31,8 @@ sub new {
         writer => $writer,
     };
 
+    my $self = bless {}, $class;
+
     my $schema;
     if (blessed($schemas) and $schemas->isa('YAML::PP::Schema')) {
         $schema = $schemas;
@@ -39,7 +41,7 @@ sub new {
         $schema = YAML::PP::Schema->new(
             boolean => $bool,
         );
-        $schema->load_subschemas(@$schemas);
+        $schema->load_subschemas($self, @$schemas);
     }
 
     my $loader = YAML::PP::Loader->new(
@@ -54,11 +56,9 @@ sub new {
         footer => $footer,
     );
 
-    my $self = bless {
-        schema => $schema,
-        loader => $loader,
-        dumper => $dumper,
-    }, $class;
+    $self->schema($schema);
+    $self->loader($loader);
+    $self->dumper($dumper);
     return $self;
 }
 
@@ -96,7 +96,7 @@ sub default_schema {
     my $schema = YAML::PP::Schema->new(
         boolean => $args{boolean},
     );
-    $schema->load_subschemas(qw/ JSON /);
+    $schema->load_subschemas($self, qw/ JSON /);
     return $schema;
 }
 

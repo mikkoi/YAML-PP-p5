@@ -17,6 +17,7 @@ sub new {
     my ($class, %args) = @_;
 
     my $cyclic_refs = delete $args{cyclic_refs} || 'allow';
+    my $limit = delete $args{limit} || {};
     die "Invalid value for cyclic_refs: $cyclic_refs"
         unless $cyclic_refs{ $cyclic_refs };
     my $schema = delete $args{schema};
@@ -28,6 +29,7 @@ sub new {
     my $self = bless {
         schema => $schema,
         cyclic_refs => $cyclic_refs,
+        nested_alias => $limit->{nested_alias} || 256,
     }, $class;
 }
 
@@ -63,6 +65,7 @@ sub document_start_event {
     my $stack = $self->stack;
     my $ref = [];
     push @$stack, { type => 'document', ref => $ref, data => $ref, event => $event };
+    $self->{nested_alias_count} = 0;
 }
 
 sub document_end_event {
@@ -93,7 +96,8 @@ sub mapping_start_event {
 
     push @$stack, $ref;
     if (defined(my $anchor = $event->{anchor})) {
-        $self->anchors->{ $anchor } = { data => $ref->{data} };
+        $self->anchors->{ $anchor } = { data => $ref->{data}, nested_alias => 1 };
+        $self->{open_anchors}->{ $anchor } = 1;
     }
 }
 
@@ -152,8 +156,12 @@ sub mapping_end_event {
     };
     $on_data->($self, \$data, \@ref);
     push @{ $stack->[-1]->{ref} }, $data;
+    my $depth = ($last->{depth} || 0) + 1;
+    $stack->[-1]->{depth} = $depth;
     if (defined(my $anchor = $last->{event}->{anchor})) {
         $self->anchors->{ $anchor }->{finished} = 1;
+        $self->anchors->{ $anchor }->{nested_alias} *= $depth;
+        delete $self->{open_anchors}->{ $anchor };
     }
     return;
 }
@@ -172,7 +180,8 @@ sub sequence_start_event {
 
     push @$stack, $ref;
     if (defined(my $anchor = $event->{anchor})) {
-        $self->anchors->{ $anchor } = { data => $ref->{data} };
+        $self->anchors->{ $anchor } = { data => $ref->{data}, nested_alias => 1 };
+        $self->{open_anchors}->{ $anchor } = 1;
     }
 }
 
@@ -189,8 +198,12 @@ sub sequence_end_event {
     };
     $on_data->($self, \$data, $ref);
     push @{ $stack->[-1]->{ref} }, $data;
+    my $depth = ($last->{depth} || 0) + 1;
+    $stack->[-1]->{depth} = $depth;
     if (defined(my $anchor = $last->{event}->{anchor})) {
         $self->anchors->{ $anchor }->{finished} = 1;
+        $self->anchors->{ $anchor }->{nested_alias} *= $depth;
+        delete $self->{open_anchors}->{ $anchor };
     }
     return;
 }
@@ -233,6 +246,16 @@ sub alias_event {
             }
         }
         $value = $anchor->{data};
+        if (my $open = $self->{open_anchors}) {
+            for my $n (sort keys %$open) {
+                $self->anchors->{ $n }->{nested_alias}
+                    += $anchor->{nested_alias} || 1;
+            }
+        }
+        $self->{nested_alias_count} += $anchor->{nested_alias} || 1;
+        if ($self->{nested_alias_count} > $self->{nested_alias}) {
+            die "Limit of nested aliases reached: $self->{nested_alias_count}";
+        }
     }
     my $last = $self->stack->[-1];
     push @{ $last->{ref} }, $value;

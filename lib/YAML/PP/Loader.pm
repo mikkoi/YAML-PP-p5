@@ -13,6 +13,7 @@ sub new {
     my ($class, %args) = @_;
 
     my $cyclic_refs = delete $args{cyclic_refs} || 'allow';
+    my $limit = delete $args{limit};
     my $schema = delete $args{schema} || YAML::PP->default_schema(
         boolean => 'perl',
     );
@@ -20,6 +21,7 @@ sub new {
     my $constructor = delete $args{constructor} || YAML::PP::Constructor->new(
         schema => $schema,
         cyclic_refs => $cyclic_refs,
+        limit => $limit,
     );
     my $parser = delete $args{parser};
     unless ($parser) {

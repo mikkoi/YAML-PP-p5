@@ -21,6 +21,7 @@ sub new {
     $bool = 'perl' unless defined $bool;
     my $schemas = delete $args{schema} || ['JSON'];
     my $cyclic_refs = delete $args{cyclic_refs} || 'allow';
+    my $limit = delete $args{limit};
     my $indent = delete $args{indent};
     my $writer = delete $args{writer};
     my $header = delete $args{header};
@@ -46,6 +47,7 @@ sub new {
         schema => $schema,
         cyclic_refs => $cyclic_refs,
         parser => $parser,
+        limit => $limit,
     );
     my $dumper = YAML::PP::Dumper->new(
         schema => $schema,

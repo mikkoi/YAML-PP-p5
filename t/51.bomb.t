@@ -13,7 +13,7 @@ subtest "nested aliases limit reached" => sub {
     my $yp = YAML::PP->new(
         schema => ['Failsafe'],
         limit => {
-            nested_alias => 100,
+            alias_depth => 100,
         },
     );
 
@@ -29,7 +29,7 @@ subtest "nested aliases ok" => sub {
     my $yp = YAML::PP->new(
         schema => ['Failsafe'],
         limit => {
-            nested_alias => 1000_000_000,
+            alias_depth => 1000_000_000,
         },
     );
 

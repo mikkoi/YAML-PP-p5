@@ -217,7 +217,7 @@ sub scalar_event {
     DEBUG and warn "CONTENT $event->{value} ($event->{style})\n";
     my $value = $self->schema->load_scalar($self, $event);
     if (defined (my $name = $event->{anchor})) {
-        my $d = int( length( $event->{value} ) / 1000 );
+        my $d = int( length( $event->{value} ) / 1000 ) + 1;
         $self->anchors->{ $name } = {
             data => $value,
             finished => 1,

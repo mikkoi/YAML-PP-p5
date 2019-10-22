@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.010;
 use FindBin '$Bin';
-use lib "$Bin";
+use lib "$Bin/../../lib";
 
 use YAML::PP;
 use JSON::PP;

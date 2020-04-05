@@ -536,7 +536,7 @@ Currently loaded as single characters without validating
 
 =head2 YAML::PP::Constructor
 
-The Constructor now supports all three YAML 1.2 Schemas, Failsafe, JSON and JSON.
+The Constructor now supports all three YAML 1.2 Schemas, Failsafe, JSON and Core.
 Additionally you can choose the schema for YAML 1.1 as C<YAML1_1>.
 
 Too see what strings are resolved as booleans, numbers, null etc. look at
